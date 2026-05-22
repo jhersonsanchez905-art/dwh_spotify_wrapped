@@ -12,4 +12,5 @@ def get_top_artists(
     spotify_id: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return artists_service.get_top_artists(db)
+    artists = artists_service.get_top_artists(db, spotify_id)
+    return {"artists": artists, "total": len(artists)}

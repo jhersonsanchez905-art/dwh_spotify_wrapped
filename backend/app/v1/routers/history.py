@@ -12,7 +12,8 @@ def get_recently_played(
     spotify_id: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return history_service.get_recently_played(spotify_id, db)
+    items = history_service.get_recently_played(spotify_id, db, limit=500)
+    return {"items": items, "total": len(items)}
 
 @router.get("/peak-hour")
 def get_peak_hour(

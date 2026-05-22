@@ -11,23 +11,13 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 
-def get_top_artists(db: Session, limit: int = 50) -> list[dict]:
-    """
-    Consulta los artistas en dim_artists ordenados por popularidad.
-
-    Args:
-        db (Session): Sesión de SQLAlchemy.
-        limit (int): Cantidad máxima de artistas a retornar.
-
-    Returns:
-        list[dict]: Lista de artistas con sus datos del DWH.
-    """
+def get_top_artists(db: Session, spotify_id: str, limit: int = 100) -> list[dict]:
     result = db.execute(
         text("""
-            SELECT artist_id, spotify_id, name, popularity,
-                   followers_count, genres, loaded_at
-            FROM dwh.dim_artists
-            ORDER BY popularity DESC
+            SELECT a.artist_id, a.spotify_id, a.name, a.popularity,
+                   a.followers_count, a.genres
+            FROM dwh.dim_artists a
+            ORDER BY a.popularity DESC
             LIMIT :limit
         """),
         {"limit": limit},
@@ -35,13 +25,14 @@ def get_top_artists(db: Session, limit: int = 50) -> list[dict]:
 
     return [
         {
-            "artist_id": row[0],
+            "id": str(row[0]),
             "spotify_id": row[1],
             "name": row[2],
             "popularity": row[3],
-            "followers_count": row[4],
+            "followers": row[4],
             "genres": row[5] if row[5] else [],
-            "loaded_at": row[6],
+            "play_count": 0,
         }
         for row in result
     ]
+    
