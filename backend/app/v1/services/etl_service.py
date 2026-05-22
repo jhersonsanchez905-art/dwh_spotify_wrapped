@@ -16,6 +16,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from backend.app.core import spotify_client
+from backend.app.core.lastfm_client import get_artist_info
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -123,24 +124,40 @@ def load_user(data: dict, db: Session) -> dict:
     return {"users_new": 1 if row and row[0] else 0}
 
 
-def load_artists(data_list: list[dict], db: Session) -> dict:
+async def load_artists(data_list: list[dict], db: Session) -> dict:
     """
     Inserta o actualiza artistas en dwh.dim_artists.
-    Siempre actualiza popularity, followers_count y genres
-    (sin condición WHERE) para que el ETL de top artists
-    enriquezca correctamente los artistas ya existentes.
+    Enriquece con Last.fm los artistas que tienen popularity=0 o genres=[].
  
     Args:
-        data_list (list[dict]): Lista de artistas transformados.
+        data_list (list[dict]): Lista de artistas transformados desde Spotify.
         db (Session): Sesión de SQLAlchemy.
  
     Returns:
         dict: Métricas de inserción.
     """
     new = 0
-    updated = 0
+    skipped = 0
  
     for data in data_list:
+        # ── Enriquecimiento con Last.fm ──────────────────────────────────
+        needs_enrichment = (
+            data.get("popularity", 0) == 0 or
+            not data.get("genres")
+        )
+ 
+        if needs_enrichment:
+            lastfm_data = await get_artist_info(data["name"])
+            if lastfm_data:
+                # Solo sobreescribir si Spotify no lo proveyó
+                if data.get("popularity", 0) == 0:
+                    data["popularity"] = lastfm_data["popularity"]
+                if not data.get("genres"):
+                    data["genres"] = lastfm_data["genres"]
+                if data.get("followers_count", 0) == 0:
+                    data["followers_count"] = lastfm_data["followers_count"]
+ 
+        # ── Insert / Update en dim_artists ───────────────────────────────
         result = db.execute(
             text("""
                 INSERT INTO dwh.dim_artists
@@ -148,27 +165,28 @@ def load_artists(data_list: list[dict], db: Session) -> dict:
                 VALUES
                     (:spotify_id, :name, :popularity, :followers_count, :genres)
                 ON CONFLICT (spotify_id) DO UPDATE SET
-                    name           = EXCLUDED.name,
-                    popularity     = EXCLUDED.popularity,
+                    name            = EXCLUDED.name,
+                    popularity      = EXCLUDED.popularity,
                     followers_count = EXCLUDED.followers_count,
-                    genres         = EXCLUDED.genres
+                    genres          = EXCLUDED.genres
                 RETURNING (xmax = 0) AS inserted
             """),
             {
                 "spotify_id": data["spotify_id"],
                 "name": data["name"],
-                "popularity": data["popularity"],
-                "followers_count": data["followers_count"],
-                "genres": data["genres"],
+                "popularity": data.get("popularity", 0),
+                "followers_count": data.get("followers_count", 0),
+                "genres": data.get("genres", []),
             },
         )
         row = result.fetchone()
         if row and row[0]:
             new += 1
         else:
-            updated += 1
+            skipped += 1
  
-    return {"artists_new": new, "artists_updated": updated}
+    db.commit()
+    return {"artists_new": new, "artists_skipped": skipped}
 
 
 def load_tracks(data_list: list[dict], db: Session) -> dict:
@@ -365,7 +383,7 @@ async def run_etl_pipeline(token: str, spotify_id: str, db: Session) -> dict:
         raw_artists = await extract_top_artists(token)
         steps.append({"phase": "Extract", "detail": f"{len(raw_artists)} artistas obtenidos", "ok": True})
         artists_data = transform_artists(raw_artists)
-        artists_metrics = load_artists(artists_data, db)
+        artists_metrics = await load_artists(artists_data, db)
         metrics["artists_new"] = artists_metrics["artists_new"]
         metrics["artists_skipped"] = artists_metrics["artists_skipped"]
         steps.append({"phase": "Load", "detail": f"dim_artists — {artists_metrics['artists_new']} nuevos / {artists_metrics['artists_skipped']} ya existían", "ok": True})
@@ -429,13 +447,28 @@ async def run_etl_pipeline(token: str, spotify_id: str, db: Session) -> dict:
         metrics["history_skipped"] = history_metrics["history_skipped"]
         steps.append({"phase": "Load", "detail": f"fact_listening_history — {history_metrics['history_new']} nuevos / {history_metrics['history_skipped']} ya existían", "ok": True})
 
-        # ── 5. Cursor ─────────────────────────────────────────
+        # ── 5. Enrichment (Last.fm) ───────────────────────────
+        from backend.app.v1.services.enrichment_service import enrich_all_artists, enrich_all_tracks
+        enrich_artists_result = await enrich_all_artists(db)
+        steps.append({
+            "phase": "Enrich",
+            "detail": f"Last.fm — {enrich_artists_result['enriched']} artistas enriquecidos / {enrich_artists_result['failed']} sin datos",
+            "ok": True,
+        })
+        enrich_tracks_result = await enrich_all_tracks(db)
+        steps.append({
+            "phase": "Enrich",
+            "detail": f"Tracks — {enrich_tracks_result['tracks_updated']} popularity actualizados",
+            "ok": True,
+        })
+
+        # ── 6. Cursor ─────────────────────────────────────────
         cursor_next_ms = None
         if history_data:
             max_played_at = max(item["played_at"] for item in history_data)
             cursor_next_ms = played_at_to_unix_ms(max_played_at)
 
-        # ── 6. Audit ──────────────────────────────────────────
+        # ── 7. Audit ──────────────────────────────────────────
         db.commit()
         duration_ms = int((time.time() - t0) * 1000)
         update_audit_success(audit_id, duration_ms, cursor_after_ms, cursor_next_ms, metrics, db)

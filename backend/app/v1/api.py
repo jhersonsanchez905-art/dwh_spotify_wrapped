@@ -10,6 +10,7 @@ description: Agrupa todos los routers de la versión 1 de la API.
 from fastapi import APIRouter
 
 from backend.app.v1.routers import auth, profile, artists, tracks, history, etl
+from backend.app.v1.routers.enrichment import router as enrichment_router
 
 router = APIRouter()
 
@@ -20,3 +21,4 @@ router.include_router(artists.router)
 router.include_router(tracks.router)
 router.include_router(history.router)
 router.include_router(etl.router)
+router.include_router(enrichment_router)
