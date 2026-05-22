@@ -1,4 +1,4 @@
-# 🎵 Mi Spotify Wrapped — Personal Data Warehouse
+#  My Spotify Wrapped — Personal Data Warehouse
 
 **Universidad de Pamplona · Bases de Datos II · 2026-I**
 
@@ -9,7 +9,7 @@ web con React + FastAPI.
 ---
 ---
 
-## 🏗️ Arquitectura
+##  Arquitectura
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -37,7 +37,7 @@ web con React + FastAPI.
 
 ---
 
-## 🗃️ Modelo dimensional
+##  Modelo dimensional
 
 **Star Schema** con elemento snowflake en `dim_tracks.artist_id → dim_artists`.
 
@@ -51,7 +51,7 @@ web con React + FastAPI.
 
 ---
 
-## 🔐 Autenticación
+##  Autenticación
 
 Flujo **OAuth 2.0 Authorization Code + PKCE**:
 
@@ -74,7 +74,7 @@ Scopes requeridos:
 
 ---
 
-## 🔄 Pipeline ETL
+##  Pipeline ETL
 
 Orden de ejecución en cada sincronización:
 
@@ -110,7 +110,7 @@ Características:
 
 ---
 
-## 🚀 Instalación y ejecución local
+##  Instalación y ejecución local
 
 ### Prerrequisitos
 - Python 3.12+
@@ -192,7 +192,7 @@ npm run dev
 
 ---
 
-## 📁 Estructura del repositorio
+##  Estructura del repositorio
 
 ```
 dwh_spotify_wrapped/
@@ -250,18 +250,13 @@ dwh_spotify_wrapped/
 
 ---
 
-## 📊 EDA — Hallazgos principales
+##  EDA — Hallazgos principales
 
 Análisis completo en `notebooks/eda_spotify_wrapped.ipynb`.
 
 **Hallazgo 1 — Hora pico inesperada:**
-El pico de escucha ocurre a las **11:00 hs**, no de noche como se esperaba.
-Esto revela un patrón de escucha matutino ligado a estudio/trabajo.
 
 **Hallazgo 2 — Perfil de nicho:**
-La mayoría de artistas en el historial tienen `popularity < 10` en Spotify,
-pero millones de oyentes en Last.fm. Indica un gusto orientado a reggaeton
-latinoamericano regional más que al pop mainstream global.
 
 **Hallazgo 3 — Pregunta sin respuesta:**
 El modelo actual no permite analizar evolución temporal del gusto musical
@@ -270,7 +265,7 @@ Se requeriría una tabla `dim_time` y un sistema de scrobbling continuo.
 
 ---
 
-## 📝 Documentación
+##  Documentación
 
 | Archivo | Contenido |
 |---------|-----------|
@@ -283,7 +278,7 @@ Se requeriría una tabla `dim_time` y un sistema de scrobbling continuo.
 
 ---
 
-## ⚠️ Notas importantes
+##  Notas importantes
 
 - El archivo `.env` **nunca** se versiona (está en `.gitignore`)
 - El notebook EDA usa datos reales de la cuenta de Spotify del autor
@@ -291,7 +286,7 @@ Se requeriría una tabla `dim_time` y un sistema de scrobbling continuo.
 
 ---
 
-## 👤 Autores
+##  Autores
 
-- **Sebastián [Apellido]** — Frontend, diseño, EDA
-- **[Nombre Integrante A]** — Backend, ETL, base de datos
+- **Sebastián Valero** — Frontend, diseño, EDA
+- **Jherson Sanchez** — Backend, ETL, base de datos
