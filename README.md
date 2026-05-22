@@ -7,15 +7,6 @@ Warehouse personal en PostgreSQL (Neon) y lo visualiza en un dashboard
 web con React + FastAPI.
 
 ---
-
-## 📸 Screenshots
-
-> Reemplaza con tus capturas reales antes de entregar.
-
-| Dashboard | Perfil | ETL |
-|-----------|--------|-----|
-| `docs/assets/dashboard.png` | `docs/assets/profile.png` | `docs/assets/etl.png` |
-
 ---
 
 ## 🏗️ Arquitectura
