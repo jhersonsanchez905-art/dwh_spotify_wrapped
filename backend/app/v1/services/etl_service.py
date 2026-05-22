@@ -124,20 +124,35 @@ def load_user(data: dict, db: Session) -> dict:
 
 
 def load_artists(data_list: list[dict], db: Session) -> dict:
+    """
+    Inserta o actualiza artistas en dwh.dim_artists.
+    Siempre actualiza popularity, followers_count y genres
+    (sin condición WHERE) para que el ETL de top artists
+    enriquezca correctamente los artistas ya existentes.
+ 
+    Args:
+        data_list (list[dict]): Lista de artistas transformados.
+        db (Session): Sesión de SQLAlchemy.
+ 
+    Returns:
+        dict: Métricas de inserción.
+    """
     new = 0
-    skipped = 0
-
+    updated = 0
+ 
     for data in data_list:
         result = db.execute(
             text("""
-                INSERT INTO dwh.dim_artists (spotify_id, name, popularity, followers_count, genres)
-                VALUES (:spotify_id, :name, :popularity, :followers_count, :genres)
+                INSERT INTO dwh.dim_artists
+                    (spotify_id, name, popularity, followers_count, genres)
+                VALUES
+                    (:spotify_id, :name, :popularity, :followers_count, :genres)
                 ON CONFLICT (spotify_id) DO UPDATE SET
-                    popularity = EXCLUDED.popularity,
+                    name           = EXCLUDED.name,
+                    popularity     = EXCLUDED.popularity,
                     followers_count = EXCLUDED.followers_count,
-                    genres = EXCLUDED.genres
-                WHERE dwh.dim_artists.popularity = 0
-                RETURNING artist_id
+                    genres         = EXCLUDED.genres
+                RETURNING (xmax = 0) AS inserted
             """),
             {
                 "spotify_id": data["spotify_id"],
@@ -147,12 +162,13 @@ def load_artists(data_list: list[dict], db: Session) -> dict:
                 "genres": data["genres"],
             },
         )
-        if result.fetchone():
+        row = result.fetchone()
+        if row and row[0]:
             new += 1
         else:
-            skipped += 1
-
-    return {"artists_new": new, "artists_skipped": skipped}
+            updated += 1
+ 
+    return {"artists_new": new, "artists_updated": updated}
 
 
 def load_tracks(data_list: list[dict], db: Session) -> dict:

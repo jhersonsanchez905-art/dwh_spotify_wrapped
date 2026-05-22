@@ -1,4 +1,5 @@
 // frontend/src/lib/api.ts
+// v2.0 — agrega endpoints peak-hour y genres
 
 import { getToken, logout } from './auth'
 
@@ -50,34 +51,21 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return response.json()
 }
 
-// ── HTTP verbs ──
-
 export const api = {
-  get: <T>(path: string) => request<T>(path, { method: 'GET' }),
-
-  post: <T>(path: string, body?: unknown) =>
-    request<T>(path, {
-      method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
-    }),
-
-  put: <T>(path: string, body?: unknown) =>
-    request<T>(path, {
-      method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
-    }),
-
-  delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  get:    <T>(path: string)                => request<T>(path, { method: 'GET' }),
+  post:   <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
+  put:    <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT',  body: body ? JSON.stringify(body) : undefined }),
+  delete: <T>(path: string)                => request<T>(path, { method: 'DELETE' }),
 }
 
-// ── Typed endpoint helpers ──
-
-import type { UserProfile } from '@/types/user'
-import type { TopArtistsResponse } from '@/types/artist'
-import type { TopTracksResponse } from '@/types/track'
-import type { RecentlyPlayedResponse } from '@/types/history'
+// ── Tipos ──────────────────────────────────────────────────────────────────
+import type { UserProfile }            from '@/types/user'
+import type { TopArtistsResponse }     from '@/types/artist'
+import type { TopTracksResponse }      from '@/types/track'
+import type { RecentlyPlayedResponse, PeakHourResponse, GenresResponse } from '@/types/history'
 import type { ETLRunResult, ETLStatusResponse } from '@/types/etl'
 
+// ── Endpoints ──────────────────────────────────────────────────────────────
 export const endpoints = {
   profile: {
     me: () => api.get<UserProfile>('/v1/profile/me'),
@@ -90,9 +78,12 @@ export const endpoints = {
   },
   history: {
     recentlyPlayed: () => api.get<RecentlyPlayedResponse>('/v1/history/recently-played'),
+    // ── NUEVOS ──────────────────────────────────────────────────────────────
+    peakHour:       () => api.get<PeakHourResponse>('/v1/history/peak-hour'),
+    genres:         () => api.get<GenresResponse>('/v1/history/genres'),
   },
   etl: {
-    run: () => api.post<ETLRunResult>('/v1/etl/run'),
+    run:    () => api.post<ETLRunResult>('/v1/etl/run'),
     status: () => api.get<ETLStatusResponse>('/v1/etl/status'),
   },
 }
