@@ -205,7 +205,7 @@ dwh_spotify_wrapped/
 │       │   ├── database.py
 │       │   ├── security.py
 │       │   ├── spotify_client.py
-│       │   └── lastfm_client.py        ← enriquecimiento
+│       │   └── lastfm_client.py        
 │       ├── v1/
 │       │   ├── routers/
 │       │   │   ├── auth.py
@@ -213,13 +213,13 @@ dwh_spotify_wrapped/
 │       │   │   ├── tracks.py
 │       │   │   ├── history.py
 │       │   │   ├── etl.py
-│       │   │   └── enrichment.py       ← nuevo
+│       │   │   └── enrichment.py       
 │       │   └── services/
 │       │       ├── etl_service.py
 │       │       ├── artists_service.py
 │       │       ├── tracks_service.py
 │       │       ├── history_service.py
-│       │       └── enrichment_service.py ← nuevo
+│       │       └── enrichment_service.py 
 │       └── models/
 │
 ├── frontend/
