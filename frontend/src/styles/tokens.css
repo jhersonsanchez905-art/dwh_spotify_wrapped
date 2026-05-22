@@ -1,0 +1,125 @@
+/* frontend/src/styles/tokens.css */
+
+:root {
+  /* ── Fonts ── */
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* ── Backgrounds ── */
+  --color-bg-base:     #0a0a0a;
+  --color-bg-surface:  #111111;
+  --color-bg-card:     #161616;
+  --color-bg-elevated: #1c1c1c;
+  --color-bg-overlay:  rgba(0, 0, 0, 0.7);
+
+  /* ── Brand accent ── */
+  --color-accent:        #1DB954;
+  --color-accent-hover:  #1ed760;
+  --color-accent-dim:    #158a3e;
+  --color-accent-alpha:  rgba(29, 185, 84, 0.15);
+  --color-accent-alpha2: rgba(29, 185, 84, 0.08);
+
+  /* ── Text ── */
+  --color-text-primary:   #ffffff;
+  --color-text-secondary: #a3a3a3;
+  --color-text-tertiary:  #6b6b6b;
+  --color-text-inverse:   #0a0a0a;
+
+  /* ── Borders ── */
+  --color-border-subtle:  rgba(255, 255, 255, 0.06);
+  --color-border-default: rgba(255, 255, 255, 0.10);
+  --color-border-strong:  rgba(255, 255, 255, 0.18);
+
+  /* ── Semantic ── */
+  --color-success:       #1DB954;
+  --color-success-bg:    rgba(29, 185, 84, 0.12);
+  --color-warning:       #f59e0b;
+  --color-warning-bg:    rgba(245, 158, 11, 0.12);
+  --color-danger:        #ef4444;
+  --color-danger-bg:     rgba(239, 68, 68, 0.12);
+  --color-info:          #60a5fa;
+  --color-info-bg:       rgba(96, 165, 250, 0.12);
+
+  /* ── Chart palette ── */
+  --chart-1: #1DB954;
+  --chart-2: #60a5fa;
+  --chart-3: #a78bfa;
+  --chart-4: #f59e0b;
+  --chart-5: #f472b6;
+  --chart-6: #34d399;
+  --chart-7: #fb923c;
+  --chart-8: #e879f9;
+
+  /* ── Spacing scale (4px base) ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ── Typography scale ── */
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg:   1.125rem;  /* 18px */
+  --text-xl:   1.25rem;   /* 20px */
+  --text-2xl:  1.5rem;    /* 24px */
+  --text-3xl:  1.875rem;  /* 30px */
+  --text-4xl:  2.25rem;   /* 36px */
+  --text-5xl:  3rem;      /* 48px */
+  --text-6xl:  3.75rem;   /* 60px */
+
+  /* ── Border radius ── */
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  24px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-xl:  0 16px 48px rgba(0, 0, 0, 0.7);
+  --shadow-accent: 0 0 24px rgba(29, 185, 84, 0.25);
+
+  /* ── Transitions ── */
+  --duration-fast:   100ms;
+  --duration-normal: 200ms;
+  --duration-slow:   350ms;
+  --ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:     cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Layout ── */
+  --layout-max-width: 1280px;
+  --layout-sidebar-width: 240px;
+  --layout-navbar-height: 64px;
+  --layout-gutter: var(--space-6);
+}
+
+/* ── Tablet ── */
+@media (max-width: 1024px) {
+  :root {
+    --layout-gutter: var(--space-4);
+  }
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  :root {
+    --text-4xl: 1.875rem;
+    --text-5xl: 2.25rem;
+    --text-6xl: 3rem;
+    --layout-gutter: var(--space-4);
+  }
+}
