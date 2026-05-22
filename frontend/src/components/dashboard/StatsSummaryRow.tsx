@@ -1,87 +1,81 @@
 // frontend/src/components/dashboard/StatsSummaryRow.tsx
+// v2.0 — usa play_count real de artistas/tracks, peak-hour del backend
 
-import AnimatedNumber from '@/components/ui/AnimatedNumber'
-import Tooltip from '@/components/ui/Tooltip'
+import { useMemo } from 'react'
+import Card from '@/components/ui/Card'
+import { SkeletonCard } from '@/components/ui/Skeleton'
 import { useTopArtists } from '@/hooks/useTopArtists'
 import { useTopTracks } from '@/hooks/useTopTracks'
-import { useRecentlyPlayed } from '@/hooks/useHistory'
-import { avgPopularity, avgDurationMin, toHourlyData } from '@/lib/chartUtils'
+import { useRecentlyPlayed, usePeakHour } from '@/hooks/useHistory'
+import { avgPopularity, avgDurationMin } from '@/lib/chartUtils'
 
-interface StatProps {
+function Stat({
+  label,
+  value,
+  displayValue,
+  sub,
+  accent,
+  tooltip,
+}: {
   label: string
   value: number
   displayValue?: string
   sub?: string
   accent?: boolean
   tooltip?: string
-  format?: (n: number) => string
-}
-
-function Stat({ label, value, displayValue, sub, accent, tooltip, format }: StatProps) {
-  const card = (
-    <div
-      className="card-hover anim-fade-up"
-      style={{
-        background: 'var(--color-bg-card)',
-        border: accent
-          ? '1px solid var(--color-accent-dim)'
-          : '1px solid var(--color-border-subtle)',
-        borderRadius: 'var(--radius-xl)',
-        padding: 'var(--space-5) var(--space-5)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--space-1)',
-        cursor: tooltip ? 'help' : 'default',
-      }}
+}) {
+  return (
+    <Card
+      style={{ flex: 1, minWidth: 0 }}
+      title={tooltip}
     >
-      <span style={{
-        fontSize: 10,
+      <div style={{
+        fontSize: 'var(--text-xs)',
         color: 'var(--color-text-tertiary)',
         textTransform: 'uppercase',
-        letterSpacing: '0.1em',
+        letterSpacing: '0.08em',
+        marginBottom: 4,
       }}>
         {label}
-      </span>
-
-      <span style={{
+      </div>
+      <div style={{
         fontFamily: 'var(--font-display)',
         fontSize: 'var(--text-3xl)',
         fontWeight: 800,
         letterSpacing: '-0.04em',
         color: accent ? 'var(--color-accent)' : 'var(--color-text-primary)',
-        lineHeight: 1,
       }}>
-        {displayValue ?? (
-          <AnimatedNumber
-            value={value}
-            format={format ?? ((n) => Math.round(n).toLocaleString())}
-          />
-        )}
-      </span>
-
+        {displayValue ?? value}
+      </div>
       {sub && (
-        <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+        <div style={{
+          fontSize: 'var(--text-xs)',
+          color: 'var(--color-text-tertiary)',
+          marginTop: 2,
+        }}>
           {sub}
-        </span>
+        </div>
       )}
-    </div>
+    </Card>
   )
-
-  if (tooltip) return <Tooltip content={tooltip}>{card}</Tooltip>
-  return card
 }
 
 export default function StatsSummaryRow() {
   const { data: artistsData } = useTopArtists()
-  const { data: tracksData }  = useTopTracks()
+  const { data: tracksData  } = useTopTracks()
   const { data: historyData } = useRecentlyPlayed()
+  const { data: peakHourData } = usePeakHour()
 
   const artists = artistsData?.artists ?? []
   const tracks  = tracksData?.tracks   ?? []
   const history = historyData?.items   ?? []
 
-  const hourly   = toHourlyData(history)
-  const peakHour = hourly.reduce((m, h) => h.count > m.count ? h : m, { hour: 0, count: 0 })
+  // Popularidad promedio real (viene del backend con popularity real de Spotify)
+  const avgPop = useMemo(() => avgPopularity(tracks), [tracks])
+
+  // Hora pico desde el backend (ya calculada analíticamente sobre TODO el historial)
+  const peakHour = peakHourData?.hour_of_day
+  const peakCount = peakHourData?.play_count ?? 0
 
   return (
     <div className="stats-row" style={{ marginBottom: 'var(--space-6)' }}>
@@ -96,17 +90,17 @@ export default function StatsSummaryRow() {
         label="Top artistas"
         value={artists.length}
         sub="únicos"
-        tooltip="Artistas en dim_artists"
+        tooltip="Artistas en dim_artists escuchados por ti"
       />
       <Stat
         label="Top tracks"
         value={tracks.length}
         sub="únicas"
-        tooltip="Canciones en dim_tracks"
+        tooltip="Canciones en dim_tracks escuchadas por ti"
       />
       <Stat
         label="Popularidad avg"
-        value={avgPopularity(tracks)}
+        value={avgPop}
         sub="de 100"
         tooltip="Promedio de popularity de tus top tracks (0–100)"
       />
@@ -115,14 +109,18 @@ export default function StatsSummaryRow() {
         value={0}
         displayValue={avgDurationMin(tracks)}
         sub="por canción"
-        tooltip="Duración promedio de tus canciones en minutos"
+        tooltip="Duración promedio de tus canciones"
       />
       <Stat
         label="Hora pico"
         value={0}
-        displayValue={peakHour.count > 0 ? `${peakHour.hour}:00` : '—'}
-        sub={`${peakHour.count} plays`}
-        tooltip="Hora del día con más reproducciones"
+        displayValue={
+          peakHour !== null && peakHour !== undefined
+            ? `${String(peakHour).padStart(2, '0')}:00`
+            : '—'
+        }
+        sub={peakCount > 0 ? `${peakCount} plays` : ''}
+        tooltip="Hora del día con más reproducciones (calculado sobre todo el historial)"
       />
     </div>
   )
