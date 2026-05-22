@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     # ── Frontend ───────────────────────────────────────────────
     FRONTEND_URL: str = "http://localhost:3000"
 
+    LASTFM_API_KEY: str = ""
+
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
