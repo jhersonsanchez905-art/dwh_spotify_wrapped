@@ -12,4 +12,5 @@ def get_top_tracks(
     spotify_id: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return tracks_service.get_top_tracks(db)
+    tracks = tracks_service.get_top_tracks(db, spotify_id)
+    return {"tracks": tracks, "total": len(tracks)}

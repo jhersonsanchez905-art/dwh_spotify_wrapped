@@ -37,29 +37,46 @@ async def run_etl(spotify_id: str = Depends(get_current_user), db: Session = Dep
     result = await etl_service.run_etl_pipeline(token, spotify_id, db)
     return result
 
-@router.get("/status", response_model=EtlStatus)
+@router.get("/status")
 def get_etl_status(spotify_id: str = Depends(get_current_user), db: Session = Depends(get_db)):
-    tables_info = []
-    for name, full_name, date_col in [
-        ("dim_users", "dwh.dim_users", "loaded_at"),
-        ("dim_artists", "dwh.dim_artists", "loaded_at"),
-        ("dim_tracks", "dwh.dim_tracks", "loaded_at"),
-        ("fact_listening_history", "dwh.fact_listening_history", "played_at"),
-    ]:
-        row = db.execute(text(f"SELECT COUNT(*), MAX({date_col}) FROM {full_name}")).fetchone()
-        count = row[0] if row else 0
-        last_loaded = row[1] if row else None
-        tables_info.append({
-            "name": name,
-            "record_count": count,
-            "last_loaded_at": str(last_loaded) if last_loaded else None,
-            "status": "empty" if count == 0 else "loaded",
-        })
     runs = db.execute(
-        text("SELECT audit_id, started_at, duration_ms, status, history_new, artists_new, tracks_new, error_message FROM dwh.etl_audit WHERE spotify_user_id = :sid ORDER BY started_at DESC LIMIT 10"),
+        text("""
+            SELECT audit_id, started_at, finished_at, duration_ms, status,
+                   history_new, history_skipped, artists_new, tracks_new,
+                   cursor_next_ms, error_message
+            FROM dwh.etl_audit
+            WHERE spotify_user_id = :sid
+            ORDER BY started_at DESC LIMIT 10
+        """),
         {"sid": spotify_id}
     ).fetchall()
+
+    total_runs = len(runs)
+    last_run = None
+    last_successful_at = None
+
+    if runs:
+        r = runs[0]
+        last_run = {
+            "audit_id": str(r[0]),
+            "status": r[4],
+            "started_at": r[1].isoformat() if r[1] else None,
+            "finished_at": r[2].isoformat() if r[2] else None,
+            "duration_ms": r[3] or 0,
+            "history_inserted": r[5] or 0,
+            "history_skipped": r[6] or 0,
+            "artists_inserted": r[7] or 0,
+            "tracks_inserted": r[8] or 0,
+            "cursor_next_ms": r[9],
+            "error_message": r[10],
+        }
+        successful = [r for r in runs if r[4] == "success"]
+        if successful:
+            last_successful_at = successful[0][2].isoformat() if successful[0][2] else None
+
     return {
-        "tables": tables_info,
-        "last_runs": [{"audit_id": r[0], "started_at": r[1], "duration_ms": r[2], "status": r[3], "history_new": r[4] or 0, "artists_new": r[5] or 0, "tracks_new": r[6] or 0, "error_message": r[7]} for r in runs]
+        "total_runs": total_runs,
+        "last_run": last_run,
+        "is_running": False,
+        "last_successful_at": last_successful_at,
     }
